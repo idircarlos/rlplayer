@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static PlayList playlist = {0};
+static Playlist playlist = {0};
 
 Song CreateSong(char *song_path) {
     Music music = LoadMusicStream(song_path);
@@ -23,7 +23,7 @@ float GetSecondsFromPercetage(Song song, float percentage) {
     return (totalSeconds*percentage)/100;
 }
 
-void InitPlayList() {
+void InitPlaylist() {
     playlist.capacity = 5;
     playlist.length = 0;
     playlist.current = -1;
@@ -35,7 +35,7 @@ void InitPlayList() {
     }
 }
 
-void AddMusicToPlayList(char *song_path) {
+void AddSong(char *song_path) {
     Song song = CreateSong(song_path);
     if (playlist.length == playlist.capacity) {
         playlist.capacity *= 2;
@@ -56,18 +56,18 @@ Song GetSongFromPlayList(size_t index) {
     exit(-1);
 }
 
-Song GetCurrentMusic() {
-    if (IsPlayingPlayList() && GetPlayListSize() > 0){
+Song GetCurrentSong() {
+    if (IsPlayingPlaylist() && GetPlaylistSize() > 0){
         return playlist.songs[playlist.current];
     }
     return (Song){0};
 }
 
-size_t GetPlayListSize() {
+size_t GetPlaylistSize() {
     return playlist.length;
 }
 
-void RemoveSongFromPlayList(size_t index);
+void RemoveSongAt(size_t index);
 
 void StartPlaying() {
     if (playlist.length > 0) {
@@ -77,7 +77,7 @@ void StartPlaying() {
     }
 }
 
-void ToggleMusicPause() {
+void TogglePause() {
     if (playlist.length > 0 && playlist.current != -1) {
         if (!IsPaused()){
             PauseMusicStream(playlist.songs[playlist.current].music);
@@ -91,28 +91,28 @@ void ToggleMusicPause() {
 }
 
 void SetTimeSong(float percentage) {
-    Song currentSong = GetCurrentMusic();
+    Song currentSong = GetCurrentSong();
     if (!currentSong.valid) return;
     float seconds = GetSecondsFromPercetage(currentSong, percentage);
     SeekMusicStream(currentSong.music, seconds+1);
 }
 
-void UpdatePlayList() {
-    Song currentSong = GetCurrentMusic();
+void UpdatePlaylist() {
+    Song currentSong = GetCurrentSong();
     if (currentSong.valid && !playlist.paused) {
         if (IsMusicStreamPlaying(currentSong.music)) {
             UpdateMusicStream(currentSong.music);
         }
         else if (!IsLastSong()){
             NextSong();
-            currentSong = GetCurrentMusic();
+            currentSong = GetCurrentSong();
             PlayMusicStream(currentSong.music);
         }
     }
 }
 
 void NextSong() {
-    if (IsPlayingPlayList()) {
+    if (IsPlayingPlaylist()) {
         if (playlist.current == playlist.length - 1) return;
         playlist.current++;
         PlayMusicStream(playlist.songs[playlist.current].music);
@@ -120,7 +120,7 @@ void NextSong() {
 }
 
 void PrevSong() {
-    if (IsPlayingPlayList()) {
+    if (IsPlayingPlaylist()) {
         if (playlist.current == 0) return;
         playlist.current--;
         PlayMusicStream(playlist.songs[playlist.current].music);
@@ -128,14 +128,14 @@ void PrevSong() {
 }
 
 bool IsLastSong() {
-    if (IsPlayingPlayList()) {
+    if (IsPlayingPlaylist()) {
         if (playlist.current == playlist.length - 1) return true;
     }
     return false;
 }
 
 void SetLooping(bool looping);
-bool IsPlayingPlayList() {
+bool IsPlayingPlaylist() {
     return playlist.current >= 0;
 }
 bool IsLooping();

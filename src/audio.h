@@ -17,23 +17,23 @@ typedef struct _play_list {
     size_t capacity;
     int current;
     bool paused;
-} PlayList;
+} Playlist;
 
-void InitPlayList();
-void AddMusicToPlayList(char *song_path);
-Song GetMusicFromPlayList(size_t index);
-Song GetCurrentMusic();
-size_t GetPlayListSize();
-void RemoveSongFromPlayList(size_t index);
+void InitPlaylist();
+void AddSong(char *song_path);
+Song GetSongAt(size_t index);
+void RemoveSongAt(size_t index);
+Song GetCurrentSong();
+size_t GetPlaylistSize();
 void StartPlaying();
-void ToggleMusicPause();
+void TogglePause();
 void SetTimeSong(float percentage);
-void UpdatePlayList();
+void UpdatePlaylist();
 void NextSong();
 void PrevSong();
 bool IsLastSong();
 void SetLooping(bool looping);
-bool IsPlayingPlayList();
+bool IsPlayingPlaylist();
 bool IsLooping();
 bool IsPaused();
 
