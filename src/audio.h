@@ -27,6 +27,7 @@ size_t GetPlayListSize();
 void RemoveSongFromPlayList(size_t index);
 void StartPlaying();
 void ToggleMusicPause();
+void SetTimeSong(float percentage);
 void UpdatePlayList();
 void SetLooping(bool looping);
 bool IsPlayingPlayList();

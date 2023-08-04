@@ -13,6 +13,7 @@ void DrawGUIText();
 
 static GuiIconName currentPlayIcon = ICON_PLAYER_PAUSE;
 static Song currentSong = {0};
+static Rectangle slider = {50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20};
 
 void InitGUI() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, APP_NAME);
@@ -47,7 +48,14 @@ void HandleDragAndDrop() {
 void DrawGUIComponents() {
     float total = currentSong.length;
     float elapsed = GetMusicTimePlayed(currentSong.music);
-    GuiProgressBar((Rectangle){50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20}, FormatTime(elapsed), FormatTime(total), (elapsed / total) * 100, 0, 100);
+    //GuiProgressBar((Rectangle){50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20}, FormatTime(elapsed), FormatTime(total), (elapsed / total) * 100, 0, 100);
+    float selected = GuiSliderBar(slider, FormatTime(elapsed), FormatTime(total), (elapsed / total) * 100, 0, 100);
+    Vector2 mousePoint = GetMousePosition();
+    if (CheckCollisionPointRec(mousePoint, slider)) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            SetTimeSong(selected);
+        }
+    }
     GuiButton((Rectangle){SCREEN_WIDTH/2 - 60, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, ""));
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 - 15, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(currentPlayIcon, ""))) {
         if (IsPlayingPlayList()) {

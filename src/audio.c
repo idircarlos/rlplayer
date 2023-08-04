@@ -19,6 +19,11 @@ Song CreateSong(char *song_path) {
     return song;
 }
 
+float GetSecondsFromPercetage(Song song, float percentage) {
+    float totalSeconds = song.length;
+    return (totalSeconds*percentage)/100;
+}
+
 void InitPlayList() {
     playlist.capacity = 5;
     playlist.length = 0;
@@ -82,6 +87,13 @@ void ToggleMusicPause() {
             playlist.songs[playlist.current].paused = false;
         }
     }
+}
+
+void SetTimeSong(float percentage) {
+    Song currentSong = GetCurrentMusic();
+    if (!currentSong.valid) return;
+    float seconds = GetSecondsFromPercetage(currentSong, percentage);
+    SeekMusicStream(currentSong.music, seconds+1);
 }
 
 void UpdatePlayList() {
