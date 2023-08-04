@@ -8,7 +8,6 @@ typedef struct _song {
     Music music;
     bool valid;
     char *name;
-    bool paused;
     float length;
 } Song;
 
@@ -17,6 +16,7 @@ typedef struct _play_list {
     size_t length;
     size_t capacity;
     int current;
+    bool paused;
 } PlayList;
 
 void InitPlayList();
@@ -29,8 +29,12 @@ void StartPlaying();
 void ToggleMusicPause();
 void SetTimeSong(float percentage);
 void UpdatePlayList();
+void NextSong();
+void PrevSong();
+bool IsLastSong();
 void SetLooping(bool looping);
 bool IsPlayingPlayList();
 bool IsLooping();
+bool IsPaused();
 
 #endif // _audio_h_

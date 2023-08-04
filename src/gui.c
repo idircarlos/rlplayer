@@ -23,14 +23,14 @@ void InitGUI() {
 }
 
 void UpdateGUI() {
-    BeginDrawing();
-    ClearBackground(BG_COLOR);
     currentSong = GetCurrentMusic();
-    DrawGUIComponents();
-    DrawGUIText();
+    BeginDrawing();
+        ClearBackground(BG_COLOR);
+        DrawGUIComponents();
+        DrawGUIText();
+    EndDrawing();
     HandleDragAndDrop();
     UpdatePlayList();
-    EndDrawing();
 }
 
 void HandleDragAndDrop() {
@@ -41,7 +41,9 @@ void HandleDragAndDrop() {
             AddMusicToPlayList(file);
         }
         UnloadDroppedFiles(files_path);
-        StartPlaying();
+        if (!IsPlayingPlayList()) {
+            StartPlaying();
+        }
     }
 }
 
@@ -56,14 +58,14 @@ void DrawGUIComponents() {
             SetTimeSong(selected);
         }
     }
-    GuiButton((Rectangle){SCREEN_WIDTH/2 - 60, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, ""));
+    if (GuiButton((Rectangle){SCREEN_WIDTH/2 - 60, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, ""))) PrevSong();
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 - 15, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(currentPlayIcon, ""))) {
         if (IsPlayingPlayList()) {
             ToggleMusicPause();
             currentPlayIcon = currentPlayIcon == ICON_PLAYER_PAUSE ? ICON_PLAYER_PLAY : ICON_PLAYER_PAUSE;
         }
     }
-    GuiButton((Rectangle){SCREEN_WIDTH/2 + 30, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, ""));
+    if(GuiButton((Rectangle){SCREEN_WIDTH/2 + 30, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, ""))) NextSong();
 }
 
 void DrawGUIText() {
