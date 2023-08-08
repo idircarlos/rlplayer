@@ -21,7 +21,7 @@ typedef struct _play_list {
 
 void InitPlaylist();
 void AddSong(char *song_path);
-Song GetSongAt(size_t index);
+Song GetSongFromPlaylist(size_t index);
 void RemoveSongAt(size_t index);
 Song GetCurrentSong();
 size_t GetPlaylistSize();

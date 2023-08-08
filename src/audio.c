@@ -48,7 +48,7 @@ void AddSong(char *song_path) {
     playlist.songs[playlist.length++] = song;
 }
 
-Song GetSongFromPlayList(size_t index) {
+Song GetSongFromPlaylist(size_t index) {
     if (index >= 0 && index < playlist.length) {
         return playlist.songs[index];
     }

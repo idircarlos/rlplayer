@@ -70,6 +70,22 @@ void DrawGUIComponents() {
 
 void DrawGUIText() {
     if (IsPlayingPlaylist() && GetPlaylistSize() > 0) {
+        DrawText("Playlist", 20, 20, 30, WHITE);
+        DrawLineEx((Vector2){20,55}, (Vector2){200,55}, 5, WHITE);
+        int y = 60;
+        Song currentSong = GetCurrentSong();
+        for (size_t i = 0; i < GetPlaylistSize(); i++) {
+            Song song = GetSongFromPlaylist(i);
+            char *songName = song.name;
+            if (!memcmp(&song, &currentSong, sizeof(Song))) {
+                DrawText(songName, 50, y, 20, BLUE);
+            }
+            else {
+                DrawText(songName, 50, y, 20, WHITE);
+            }
+            GuiButton((Rectangle){20, y, 20, 20}, GuiIconText(ICON_CROSS, ""));
+            y += 30;
+        }
         DrawTextCentered(currentSong.name, 40, WHITE);
     }
     else {
