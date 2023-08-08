@@ -169,7 +169,7 @@ void PrevSong() {
 
 bool IsFirstSong() {
     if (IsPlaylistReady()) {
-        if (playlist.current == 0) return true;
+        return playlist.current == 0;
     }
     return false;
 }
