@@ -3,6 +3,7 @@
 
 #include <raylib.h>
 #include <ctype.h>
+#include "list.h"
 
 typedef struct _song {
     Music music;
@@ -11,10 +12,8 @@ typedef struct _song {
     float length;
 } Song;
 
-typedef struct _play_list {
-    Song  *songs;
-    size_t length;
-    size_t capacity;
+typedef struct _playlist {
+    LinkedList *songs;
     int current;
     bool paused;
 } Playlist;
@@ -31,9 +30,10 @@ void SetTimeSong(float percentage);
 void UpdatePlaylist();
 void NextSong();
 void PrevSong();
+bool IsFirstSong();
 bool IsLastSong();
 void SetLooping(bool looping);
-bool IsPlayingPlaylist();
+bool IsPlaylistReady();
 bool IsLooping();
 bool IsPaused();
 

@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "list.h"
 #include <stdio.h>
+#include <string.h>
 
 void printInt(void *e) {
     char *a = (char*)(e);
@@ -9,15 +10,6 @@ void printInt(void *e) {
 
 int main() {
     InitGUI();
-    LinkedList *list = ListCreate();
-    char *a = "hola";
-    char *b = "que";
-    char *c = "tal";
-    ListAdd(list, (void*)a);
-    ListAdd(list, (void*)b);
-    ListAdd(list, (void*)c);
-    ListRemove(list, 0);
-    ListIter(list, printInt);
     while (!WindowShouldClose()){
         UpdateGUI();
     }

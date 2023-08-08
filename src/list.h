@@ -1,21 +1,19 @@
+#pragma once
+
 #include <ctype.h>
 #include <stdbool.h>
 
-typedef struct _node {
-    void *data;
-    struct _node *next;
-} Node;
+typedef struct Node Node;
+typedef struct LinkedList LinkedList;
 
-typedef struct _linked_list {
-    Node *head;
-    size_t size;
-} LinkedList;
-
-typedef void (*func_entry_list_t) (void *elem);
+typedef void (*FuncEntryList) (void *elem);
+typedef bool (*FuncCmpList) (void *elem1, void *elem2);
 
 LinkedList *ListCreate();
 void ListAdd(LinkedList *list, void *item);
+void *ListGet(LinkedList *list, size_t index);
 size_t ListSize(LinkedList *list);
+bool ListContains(LinkedList *list, void *elem, FuncCmpList cmp_function);
 bool ListIsEmpty(LinkedList *list);
-void ListRemove(LinkedList *list, size_t index);
-void ListIter(LinkedList *list, func_entry_list_t visit_entry);
+void ListRemove(LinkedList *list, size_t index, FuncEntryList release_function);
+void ListIter(LinkedList *list, FuncEntryList visit_entry);

@@ -41,7 +41,7 @@ void HandleDragAndDrop() {
             AddSong(file);
         }
         UnloadDroppedFiles(files_path);
-        if (!IsPlayingPlaylist()) {
+        if (!IsPlaylistReady()) {
             StartPlaying();
         }
     }
@@ -60,7 +60,7 @@ void DrawGUIComponents() {
     }
     if (GuiButton((Rectangle){SCREEN_WIDTH/2 - 60, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, ""))) PrevSong();
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 - 15, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(currentPlayIcon, ""))) {
-        if (IsPlayingPlaylist()) {
+        if (IsPlaylistReady()) {
             TogglePause();
             currentPlayIcon = currentPlayIcon == ICON_PLAYER_PAUSE ? ICON_PLAYER_PLAY : ICON_PLAYER_PAUSE;
         }
@@ -69,10 +69,10 @@ void DrawGUIComponents() {
 }
 
 void DrawGUIText() {
-    if (IsPlayingPlaylist() && GetPlaylistSize() > 0) {
+    if (IsPlaylistReady() && GetPlaylistSize() > 0) {
         DrawText("Playlist", 20, 20, 30, WHITE);
-        DrawLineEx((Vector2){20,55}, (Vector2){200,55}, 5, WHITE);
-        int y = 60;
+        DrawLineEx((Vector2){20,55}, (Vector2){140,55}, 5, WHITE);
+        int y = 70;
         Song currentSong = GetCurrentSong();
         for (size_t i = 0; i < GetPlaylistSize(); i++) {
             Song song = GetSongFromPlaylist(i);
@@ -83,7 +83,7 @@ void DrawGUIText() {
             else {
                 DrawText(songName, 50, y, 20, WHITE);
             }
-            GuiButton((Rectangle){20, y, 20, 20}, GuiIconText(ICON_CROSS, ""));
+            if (GuiButton((Rectangle){20, y, 20, 20}, GuiIconText(ICON_CROSS, ""))) RemoveSongAt(i);
             y += 30;
         }
         DrawTextCentered(currentSong.name, 40, WHITE);

@@ -5,17 +5,33 @@
 
 static Playlist playlist = {0};
 
-Song CreateSong(char *song_path) {
+void DestroySong(void *elem) {
+    Song *song = (Song*)elem;
+    UnloadMusicStream(song->music);
+    free(song->name);
+}
+
+Song *CreateSong(char *song_path) {
     Music music = LoadMusicStream(song_path);
     music.looping = false;
-    Song song = {0};
-    song.music = music;
-    song.valid = true;
+    Song *song = (Song*)malloc(sizeof(Song));
+    song->music = music;
+    song->valid = true;
     const char *filename = GetFileName(song_path);
-    song.name = malloc(strlen(filename) + 1);
-    strcpy(song.name, filename);
-    song.length = GetMusicTimeLength(music);
+    song->name = malloc(strlen(filename) + 1);
+    strcpy(song->name, filename);
+    song->length = GetMusicTimeLength(music);
     return song;
+}
+
+bool PlaylistContainsSong(const char *song_name) {
+    for (size_t i = 0; i < GetPlaylistSize(); i++) {
+        Song song = GetSongFromPlaylist(i);
+        if (strcmp(song_name, song.name) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 float GetSecondsFromPercetage(Song song, float percentage) {
@@ -24,11 +40,9 @@ float GetSecondsFromPercetage(Song song, float percentage) {
 }
 
 void InitPlaylist() {
-    playlist.capacity = 5;
-    playlist.length = 0;
-    playlist.current = -1;
+    playlist.songs = ListCreate();
     playlist.paused = true;
-    playlist.songs = (Song*)malloc(playlist.capacity * sizeof(Music));
+    playlist.current = -1;
     if (playlist.songs == NULL) {
         fprintf(stderr, "Could not allocate memory for playlist");
         exit(-1);
@@ -36,55 +50,79 @@ void InitPlaylist() {
 }
 
 void AddSong(char *song_path) {
-    Song song = CreateSong(song_path);
-    if (playlist.length == playlist.capacity) {
-        playlist.capacity *= 2;
-        playlist.songs = realloc(playlist.songs, playlist.capacity);
-        if (playlist.songs == NULL) {
-            fprintf(stderr, "Could not reallocate memory for playlist");
-            exit(-1);
-        }
+    const char *song_name = GetFileName(song_path);
+    if (!PlaylistContainsSong(song_name)) {
+        Song *song = CreateSong(song_path);
+        ListAdd(playlist.songs, (void*)song);
     }
-    playlist.songs[playlist.length++] = song;
 }
 
 Song GetSongFromPlaylist(size_t index) {
-    if (index >= 0 && index < playlist.length) {
-        return playlist.songs[index];
-    }
-    fprintf(stderr, "Index %lld is out of bounds for playlist with size %lld", index, playlist.length);
-    exit(-1);
+    Song *song = (Song*)ListGet(playlist.songs, index);
+    return *song;
 }
 
 Song GetCurrentSong() {
-    if (IsPlayingPlaylist() && GetPlaylistSize() > 0){
-        return playlist.songs[playlist.current];
+    if (IsPlaylistReady() && GetPlaylistSize() > 0){
+        return GetSongFromPlaylist(playlist.current);
     }
     return (Song){0};
 }
 
 size_t GetPlaylistSize() {
-    return playlist.length;
+    return ListSize(playlist.songs);
 }
 
-void RemoveSongAt(size_t index);
+void RemoveSongAt(size_t index) {
+    if (GetPlaylistSize() == 1 && index == 0) {
+        Song onlySong = GetCurrentSong();
+        StopMusicStream(onlySong.music);
+        ListRemove(playlist.songs, index, DestroySong);
+        playlist.current = -1;
+        return;
+    }
+    Song songToPlay;
+    if (IsFirstSong() && index == 0) {
+        ListRemove(playlist.songs, index, DestroySong);
+        songToPlay = GetSongFromPlaylist(0);
+        PlayMusicStream(songToPlay.music);
+    }
+    else if (IsLastSong() && index == GetPlaylistSize() - 1) {
+        songToPlay = GetSongFromPlaylist(GetPlaylistSize() - 1);
+        PlayMusicStream(songToPlay.music);
+        playlist.current--;
+        ListRemove(playlist.songs, index, DestroySong);
+    }
+    else {
+        if (playlist.current == index) {
+            songToPlay = GetSongFromPlaylist(index+1);
+            PlayMusicStream(songToPlay.music);
+        }
+        else if (playlist.current > index) {
+            playlist.current--;
+        }
+        ListRemove(playlist.songs, index, DestroySong);
+    }
+}
 
 void StartPlaying() {
-    if (playlist.length > 0) {
+    if (GetPlaylistSize() > 0) {
         playlist.current = 0;
         playlist.paused = false;
-        PlayMusicStream(playlist.songs[playlist.current].music);
+        Song song = GetCurrentSong();
+        PlayMusicStream(song.music);
     }
 }
 
 void TogglePause() {
-    if (playlist.length > 0 && playlist.current != -1) {
+    if (GetPlaylistSize() > 0 && playlist.current != -1) {
+        Song song = GetCurrentSong();
         if (!IsPaused()){
-            PauseMusicStream(playlist.songs[playlist.current].music);
+            PauseMusicStream(song.music);
             playlist.paused = true;
         }
         else {
-            PlayMusicStream(playlist.songs[playlist.current].music);
+            PlayMusicStream(song.music);
             playlist.paused = false;
         }
     }
@@ -112,30 +150,40 @@ void UpdatePlaylist() {
 }
 
 void NextSong() {
-    if (IsPlayingPlaylist()) {
-        if (playlist.current == playlist.length - 1) return;
+    if (IsPlaylistReady()) {
+        if (playlist.current == GetPlaylistSize() - 1) return;
         playlist.current++;
-        PlayMusicStream(playlist.songs[playlist.current].music);
+        Song currentSong = GetCurrentSong();
+        PlayMusicStream(currentSong.music);
     }
 }
 
 void PrevSong() {
-    if (IsPlayingPlaylist()) {
+    if (IsPlaylistReady()) {
         if (playlist.current == 0) return;
         playlist.current--;
-        PlayMusicStream(playlist.songs[playlist.current].music);
+        Song currentSong = GetCurrentSong();
+        PlayMusicStream(currentSong.music);
     }
 }
 
+bool IsFirstSong() {
+    if (IsPlaylistReady()) {
+        if (playlist.current == 0) return true;
+    }
+    return false;
+}
+
 bool IsLastSong() {
-    if (IsPlayingPlaylist()) {
-        if (playlist.current == playlist.length - 1) return true;
+    if (IsPlaylistReady()) {
+        if (playlist.current == GetPlaylistSize() - 1) return true;
     }
     return false;
 }
 
 void SetLooping(bool looping);
-bool IsPlayingPlaylist() {
+
+bool IsPlaylistReady() {
     return playlist.current >= 0;
 }
 bool IsLooping();
