@@ -11,14 +11,12 @@ struct Node {
 struct LinkedList {
     Node *head;
     size_t size;
-    bool (*cmp_function) (void *elem1, void *elem2);
 };
 
-LinkedList *ListCreate(FuncCmpList cmp_function) {
+LinkedList *ListCreate() {
     LinkedList *list = (LinkedList*)malloc(sizeof(LinkedList));
     list->head = NULL;
     list->size = 0;
-    list->cmp_function = cmp_function;
     return list;
 }
 
