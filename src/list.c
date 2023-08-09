@@ -89,3 +89,10 @@ void ListIter(LinkedList *list, FuncEntryList visit_entry) {
         currentNode = currentNode->next;
     }   
 }
+
+void ListDestroy(LinkedList *list, FuncEntryList release_function) {
+    for (size_t i = 0; i < ListSize(list); i++) {
+        ListRemove(list, i, release_function);
+    }
+    free(list);
+}

@@ -17,3 +17,4 @@ bool ListContains(LinkedList *list, void *elem, FuncCmpList cmp_function);
 bool ListIsEmpty(LinkedList *list);
 void ListRemove(LinkedList *list, size_t index, FuncEntryList release_function);
 void ListIter(LinkedList *list, FuncEntryList visit_entry);
+void ListDestroy(LinkedList *list, FuncEntryList release_function);

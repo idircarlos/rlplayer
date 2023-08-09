@@ -5,5 +5,5 @@
 
 void DrawTextCentered(char *text, int fontSize, Color color) {
     int size = MeasureText(text, fontSize);
-    DrawText(text, (SCREEN_WIDTH/2) - (size/2), SCREEN_HEIGHT/2, 40, RAYWHITE);
+    DrawText(text, (GetScreenWidth()/2) - (size/2), GetScreenHeight()/2, 40, RAYWHITE);
 }

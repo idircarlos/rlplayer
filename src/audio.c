@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct _playlist {
+    LinkedList *songs;
+    int current;
+    bool paused;
+} Playlist;
+
+static float masterVolume = 0.5;
 static Playlist playlist = {0};
 
 void DestroySong(void *elem) {
@@ -47,6 +54,7 @@ void InitPlaylist() {
         fprintf(stderr, "Could not allocate memory for playlist");
         exit(-1);
     }
+    SetMasterVolume(masterVolume);
 }
 
 void AddSong(char *song_path) {
@@ -69,11 +77,25 @@ Song GetCurrentSong() {
     return (Song){0};
 }
 
+float GetVolume() {
+    return masterVolume;
+}
+
+void SetVolume(float volPercentage) {
+    masterVolume = volPercentage;
+    SetMasterVolume(volPercentage);
+}
+
 size_t GetPlaylistSize() {
     return ListSize(playlist.songs);
 }
 
-void RemoveSongAt(size_t index) {
+size_t GetCurrentSongIndex() {
+    return playlist.current;
+}
+
+void RemoveSongAt(int index) {
+    if (index < 0) return;
     if (GetPlaylistSize() == 1 && index == 0) {
         Song onlySong = GetCurrentSong();
         StopMusicStream(onlySong.music);

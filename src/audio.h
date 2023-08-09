@@ -12,18 +12,15 @@ typedef struct _song {
     float length;
 } Song;
 
-typedef struct _playlist {
-    LinkedList *songs;
-    int current;
-    bool paused;
-} Playlist;
-
 void InitPlaylist();
 void AddSong(char *song_path);
 Song GetSongFromPlaylist(size_t index);
-void RemoveSongAt(size_t index);
+void RemoveSongAt(int index);
 Song GetCurrentSong();
 size_t GetPlaylistSize();
+size_t GetCurrentSongIndex();
+float GetVolume();
+void SetVolume(float volPercentage);
 void StartPlaying();
 void TogglePause();
 void SetTimeSong(float percentage);

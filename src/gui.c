@@ -6,17 +6,34 @@
 #define RAYGUI_IMPLEMENTATION   // If need raygui.h in more files, move this definition to main.c
 #include <raygui.h>
 
+#define BG_COLOR        GetColor(0x1A1A1AFF)
+#define SCREEN_WIDTH    800
+#define SCREEN_HEIGHT   500
+#define APP_NAME        "RLPlayer"
+#define EMPTY_STRING    ""
+#define VOLUME_STRING   "Vol  "
 
+void HandleInput();
 void HandleDragAndDrop();
 void DrawGUIComponents();
 void DrawGUIText();
+void HandlePause();
 
 static GuiIconName currentPlayIcon = ICON_PLAYER_PAUSE;
 static Song currentSong = {0};
 static Rectangle slider = {50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20};
+static Rectangle volSlider = {650, SCREEN_HEIGHT - 60, 100, 15};
+bool draggingSong = false;
+float percentageSong = 0.0f;
+
+char timeElapsedFormatted [10];
+char timeTotalFormatted [10];
+char volumeFormatted [10];
 
 void InitGUI() {
+    SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, APP_NAME);
+    SetExitKey(KEY_NULL);
     InitAudioDevice();
     InitPlaylist();
     SetTargetFPS(60);
@@ -29,8 +46,20 @@ void UpdateGUI() {
         DrawGUIComponents();
         DrawGUIText();
     EndDrawing();
+    HandleInput();
     HandleDragAndDrop();
     UpdatePlaylist();
+}
+
+void HandleInput() {
+    int key = GetKeyPressed();
+    switch (key) {
+        case KEY_UP: PrevSong(); break;
+        case KEY_DOWN: NextSong(); break;
+        case KEY_SPACE: HandlePause(); break;
+        case KEY_DELETE: RemoveSongAt(GetCurrentSongIndex());
+        default: break;
+    }
 }
 
 void HandleDragAndDrop() {
@@ -50,22 +79,30 @@ void HandleDragAndDrop() {
 void DrawGUIComponents() {
     float total = currentSong.length;
     float elapsed = GetMusicTimePlayed(currentSong.music);
-    //GuiProgressBar((Rectangle){50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20}, FormatTime(elapsed), FormatTime(total), (elapsed / total) * 100, 0, 100);
-    float selected = GuiSliderBar(slider, FormatTime(elapsed), FormatTime(total), (elapsed / total) * 100, 0, 100);
+    percentageSong = draggingSong ? percentageSong : (elapsed / total) * 100;   // if we are dragging the slider, then do not compute the percentage elapsed.
+    percentageSong = GuiSliderBar(slider, FormatTime(elapsed, timeElapsedFormatted), FormatTime(total, timeTotalFormatted), percentageSong, 0, 100);
     Vector2 mousePoint = GetMousePosition();
     if (CheckCollisionPointRec(mousePoint, slider)) {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            SetTimeSong(selected);
+        if (!draggingSong && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            draggingSong = true;
+        }
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && draggingSong) {
+            SetTimeSong(percentageSong);
+            draggingSong = false;
         }
     }
     if (GuiButton((Rectangle){SCREEN_WIDTH/2 - 60, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, ""))) PrevSong();
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 - 15, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(currentPlayIcon, ""))) {
-        if (IsPlaylistReady()) {
-            TogglePause();
-            currentPlayIcon = currentPlayIcon == ICON_PLAYER_PAUSE ? ICON_PLAYER_PLAY : ICON_PLAYER_PAUSE;
-        }
+        HandlePause();
     }
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 + 30, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, ""))) NextSong();
+    float vol = GetVolume();
+    vol = GuiSliderBar(volSlider, VOLUME_STRING, FormatVolume(vol, volumeFormatted), vol, 0, 1);
+    if (CheckCollisionPointRec(mousePoint, volSlider)) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            SetVolume(vol);
+        }
+    }
 }
 
 void DrawGUIText() {
@@ -90,4 +127,11 @@ void DrawGUIText() {
         y += 30;
     }
     DrawTextCentered(currentSong.name, 40, WHITE);
+}
+
+void HandlePause() {
+    if (IsPlaylistReady()) {
+        TogglePause();
+        currentPlayIcon = currentPlayIcon == ICON_PLAYER_PAUSE ? ICON_PLAYER_PLAY : ICON_PLAYER_PAUSE;
+    }
 }
