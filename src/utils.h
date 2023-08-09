@@ -6,6 +6,7 @@
 
 #define VOL_FORMAT  "  %d%%"
 #define TIME_FORMAT "  %02d:%02d  "
+#define NO_TIME_FORMAT "  --:--  "
 
 char *FormatVolume(float percentage, char *formatted) {
     sprintf(formatted, VOL_FORMAT, (int)(100*percentage));
@@ -13,10 +14,14 @@ char *FormatVolume(float percentage, char *formatted) {
 }
 
 char *FormatTime(float time, char *formatted) {
-    time = time != time ? 0.0f : time; // Check if time is NaN
-    int minutes = (int)time / 60;
-    int seconds = (int)time % 60;
-    sprintf(formatted, TIME_FORMAT, minutes, seconds);
+    if (time < 0) {
+        sprintf(formatted, NO_TIME_FORMAT);
+    }
+    else {
+        int minutes = (int)time / 60;
+        int seconds = (int)time % 60;
+        sprintf(formatted, TIME_FORMAT, minutes, seconds);
+    }
     return formatted;
 }
 

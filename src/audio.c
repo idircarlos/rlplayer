@@ -154,7 +154,7 @@ void SetTimeSong(float percentage) {
     Song currentSong = GetCurrentSong();
     if (!currentSong.valid) return;
     float seconds = GetSecondsFromPercetage(currentSong, percentage);
-    SeekMusicStream(currentSong.music, seconds+1);
+    SeekMusicStream(currentSong.music, seconds);
 }
 
 void UpdatePlaylist() {

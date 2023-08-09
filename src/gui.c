@@ -24,7 +24,9 @@ static Song currentSong = {0};
 static Rectangle slider = {50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20};
 static Rectangle volSlider = {650, SCREEN_HEIGHT - 60, 100, 15};
 bool draggingSong = false;
+bool draggingVol = false;
 float percentageSong = 0.0f;
+
 
 char timeElapsedFormatted [10];
 char timeTotalFormatted [10];
@@ -77,31 +79,44 @@ void HandleDragAndDrop() {
 }
 
 void DrawGUIComponents() {
-    float total = currentSong.length;
-    float elapsed = GetMusicTimePlayed(currentSong.music);
-    percentageSong = draggingSong ? percentageSong : (elapsed / total) * 100;   // if we are dragging the slider, then do not compute the percentage elapsed.
+    float total = -1;
+    float elapsed = -1;
+    if (IsPlaylistReady()) {
+        total = currentSong.length;
+        elapsed = GetMusicTimePlayed(currentSong.music);
+        percentageSong = draggingSong ? percentageSong : (elapsed / total) * 100;   // if we are dragging the slider, then do not compute the percentage elapsed.
+    }
+    else {
+        percentageSong = 0;   // if playlist not ready, no percentage of song available
+    }
     percentageSong = GuiSliderBar(slider, FormatTime(elapsed, timeElapsedFormatted), FormatTime(total, timeTotalFormatted), percentageSong, 0, 100);
     Vector2 mousePoint = GetMousePosition();
-    if (CheckCollisionPointRec(mousePoint, slider)) {
-        if (!draggingSong && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+    if (CheckCollisionPointRec(mousePoint, slider) && IsPlaylistReady()) {
+        if (!draggingSong && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             draggingSong = true;
         }
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && draggingSong) {
-            SetTimeSong(percentageSong);
-            draggingSong = false;
-        }
+    }
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && draggingSong) {
+        SetTimeSong(percentageSong);
+        draggingSong = false;
     }
     if (GuiButton((Rectangle){SCREEN_WIDTH/2 - 60, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_PREVIOUS, ""))) PrevSong();
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 - 15, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(currentPlayIcon, ""))) {
         HandlePause();
     }
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 + 30, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, ""))) NextSong();
-    float vol = GetVolume();
-    vol = GuiSliderBar(volSlider, VOLUME_STRING, FormatVolume(vol, volumeFormatted), vol, 0, 1);
+    float volume = GetVolume();
+    volume = GuiSliderBar(volSlider, VOLUME_STRING, FormatVolume(volume, volumeFormatted), volume, 0, 1);
     if (CheckCollisionPointRec(mousePoint, volSlider)) {
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            SetVolume(vol);
+        if (!draggingVol && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            draggingVol = true;
         }
+    }
+    if (draggingVol && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        SetVolume(volume);
+    }
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && draggingVol) {
+        draggingVol = false;
     }
 }
 
