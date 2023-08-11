@@ -9,7 +9,8 @@
 #define NO_TIME_FORMAT "  --:--  "
 
 char *FormatVolume(float percentage, char *formatted) {
-    sprintf(formatted, VOL_FORMAT, (int)(100*percentage));
+    int vol = (100*percentage);
+    sprintf(formatted, VOL_FORMAT, vol);
     return formatted;
 }
 

@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "render.h"
 #include "audio.h"
+#include "bubble.h"
 
 #define RAYGUI_IMPLEMENTATION   // If need raygui.h in more files, move this definition to main.c
 #include <raygui.h>
@@ -13,6 +14,9 @@
 #define EMPTY_STRING    ""
 #define VOLUME_STRING   "Vol  "
 
+#define NEXT(index,size) ((index + 1) % (size)) 
+#define PREV(index,size) ((index + (size - 1)) % (size))
+
 void HandleInput();
 void HandleDragAndDrop();
 void DrawGUIComponents();
@@ -23,14 +27,17 @@ static GuiIconName currentPlayIcon = ICON_PLAYER_PAUSE;
 static Song currentSong = {0};
 static Rectangle slider = {50, SCREEN_HEIGHT - 100, SCREEN_WIDTH - 100, 20};
 static Rectangle volSlider = {650, SCREEN_HEIGHT - 60, 100, 15};
+
 bool draggingSong = false;
 bool draggingVol = false;
 float percentageSong = 0.0f;
-
+float percentageVol = 0.5000f;
 
 char timeElapsedFormatted [10];
 char timeTotalFormatted [10];
 char volumeFormatted [10];
+
+int currentSongIndex = 0;
 
 void InitGUI() {
     SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
@@ -38,29 +45,45 @@ void InitGUI() {
     SetExitKey(KEY_NULL);
     InitAudioDevice();
     InitPlaylist();
+    InitBubbles();
     SetTargetFPS(60);
 }
 
 void UpdateGUI() {
     currentSong = GetCurrentSong();
+    percentageVol = GetVolume();
+    HandleInput();
+    HandleDragAndDrop();
     BeginDrawing();
         ClearBackground(BG_COLOR);
         DrawGUIComponents();
         DrawGUIText();
     EndDrawing();
-    HandleInput();
-    HandleDragAndDrop();
     UpdatePlaylist();
+    UpdateBubbles();
 }
 
 void HandleInput() {
     int key = GetKeyPressed();
     switch (key) {
-        case KEY_UP: PrevSong(); break;
-        case KEY_DOWN: NextSong(); break;
+        case KEY_UP: currentSongIndex = PREV(currentSongIndex, GetPlaylistSize()); break;
+        case KEY_DOWN: currentSongIndex = NEXT(currentSongIndex, GetPlaylistSize()); break;
         case KEY_SPACE: HandlePause(); break;
-        case KEY_DELETE: RemoveSongAt(GetCurrentSongIndex());
+        case KEY_DELETE: RemoveSongAt(GetCurrentSongIndex()); break;
+        case KEY_ENTER: PlaySong(currentSongIndex); break;
+        case KEY_S: SwapSongs(GetCurrentSongIndex(), currentSongIndex); break;
         default: break;
+    }
+    if (IsKeyDown(KEY_LEFT)) {
+        SetVolume(percentageVol - 0.01000f);
+    }
+    else if (IsKeyDown(KEY_RIGHT)) {
+        SetVolume(percentageVol + 0.01000f);
+    }
+    bool shift = IsKeyDown(KEY_LEFT_SHIFT);
+    if (shift) {
+        bool down = IsKeyDown(KEY_DOWN);
+        // SwapSongs();
     }
 }
 
@@ -105,15 +128,15 @@ void DrawGUIComponents() {
         HandlePause();
     }
     if(GuiButton((Rectangle){SCREEN_WIDTH/2 + 30, SCREEN_HEIGHT - 50 - 15, 30, 30}, GuiIconText(ICON_PLAYER_NEXT, ""))) NextSong();
-    float volume = GetVolume();
-    volume = GuiSliderBar(volSlider, VOLUME_STRING, FormatVolume(volume, volumeFormatted), volume, 0, 1);
+    percentageVol = GuiSliderBar(volSlider, VOLUME_STRING, FormatVolume(percentageVol, volumeFormatted), percentageVol, 0.0f, 1.0f);
+    printf("%f\n", percentageVol);
     if (CheckCollisionPointRec(mousePoint, volSlider)) {
         if (!draggingVol && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             draggingVol = true;
         }
     }
     if (draggingVol && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        SetVolume(volume);
+        SetVolume(percentageVol);
     }
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && draggingVol) {
         draggingVol = false;
@@ -134,9 +157,16 @@ void DrawGUIText() {
         char *songName = song.name;
         if (!memcmp(&song, &currentSong, sizeof(Song))) {
             DrawText(songName, 50, y, 20, BLUE);
+            int size = MeasureText(songName, 20);
+            int fontHeight = GetFontDefault().baseSize;
+            int flagSize = 4;
+            DrawBubbles((Vector2){50 + size + 20, y + flagSize + fontHeight/2}, WHITE);
         }
         else {
             DrawText(songName, 50, y, 20, WHITE);
+        }
+        if (i == currentSongIndex) {
+            DrawText(songName, 50, y, 20, GREEN);
         }
         if (GuiButton((Rectangle){20, y, 20, 20}, GuiIconText(ICON_CROSS, ""))) RemoveSongAt(i);
         y += 30;
@@ -147,6 +177,7 @@ void DrawGUIText() {
 void HandlePause() {
     if (IsPlaylistReady()) {
         TogglePause();
+        TogglePauseBubbles();
         currentPlayIcon = currentPlayIcon == ICON_PLAYER_PAUSE ? ICON_PLAYER_PLAY : ICON_PLAYER_PAUSE;
     }
 }

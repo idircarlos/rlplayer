@@ -15,6 +15,8 @@ void *ListGet(LinkedList *list, size_t index);
 size_t ListSize(LinkedList *list);
 bool ListContains(LinkedList *list, void *elem, FuncCmpList cmp_function);
 bool ListIsEmpty(LinkedList *list);
+void ListSwap(LinkedList *list, int index_i, int index_j);
 void ListRemove(LinkedList *list, size_t index, FuncEntryList release_function);
 void ListIter(LinkedList *list, FuncEntryList visit_entry);
 void ListDestroy(LinkedList *list, FuncEntryList release_function);
+void ListPrint(LinkedList *list);

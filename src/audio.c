@@ -9,7 +9,7 @@ typedef struct _playlist {
     bool paused;
 } Playlist;
 
-static float masterVolume = 0.5;
+static float masterVolume = 0.5f;
 static Playlist playlist = {0};
 
 void DestroySong(void *elem) {
@@ -54,7 +54,7 @@ void InitPlaylist() {
         fprintf(stderr, "Could not allocate memory for playlist");
         exit(-1);
     }
-    SetMasterVolume(masterVolume);
+    SetVolume(masterVolume);
 }
 
 void AddSong(char *song_path) {
@@ -82,6 +82,7 @@ float GetVolume() {
 }
 
 void SetVolume(float volPercentage) {
+    if (volPercentage < 0 || volPercentage > 1.0f) return;
     masterVolume = volPercentage;
     SetMasterVolume(volPercentage);
 }
@@ -92,6 +93,19 @@ size_t GetPlaylistSize() {
 
 size_t GetCurrentSongIndex() {
     return playlist.current;
+}
+
+void SwapSongs(int i, int j) {
+    if (IsPlaylistReady()) {
+        int currentIndex = GetCurrentSongIndex();
+        ListSwap(playlist.songs, i, j);
+        if (currentIndex == i) {
+            playlist.current = j;
+        }
+        else if (currentIndex == j) {
+            playlist.current = i;
+        }
+    }
 }
 
 void RemoveSongAt(int index) {
@@ -171,10 +185,10 @@ void UpdatePlaylist() {
     }
 }
 
-void NextSong() {
+void PlaySong(int index) {
     if (IsPlaylistReady()) {
-        if (playlist.current == GetPlaylistSize() - 1) return;
-        playlist.current++;
+        if (playlist.current < 0 || playlist.current > GetPlaylistSize()) return;
+        playlist.current = index;
         Song currentSong = GetCurrentSong();
         PlayMusicStream(currentSong.music);
     }
@@ -184,6 +198,15 @@ void PrevSong() {
     if (IsPlaylistReady()) {
         if (playlist.current == 0) return;
         playlist.current--;
+        Song currentSong = GetCurrentSong();
+        PlayMusicStream(currentSong.music);
+    }
+}
+
+void NextSong() {
+    if (IsPlaylistReady()) {
+        if (playlist.current == GetPlaylistSize() - 1) return;
+        playlist.current++;
         Song currentSong = GetCurrentSong();
         PlayMusicStream(currentSong.music);
     }
