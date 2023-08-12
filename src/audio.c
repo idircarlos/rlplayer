@@ -82,9 +82,14 @@ float GetVolume() {
 }
 
 void SetVolume(float volPercentage) {
-    if (volPercentage < 0 || volPercentage > 1.0f) return;
+    if (volPercentage < 0) {
+        volPercentage = 0;
+    }
+    else if (volPercentage > 1) {
+        volPercentage = 1;
+    }
     masterVolume = volPercentage;
-    SetMasterVolume(volPercentage);
+    SetMasterVolume(masterVolume);
 }
 
 size_t GetPlaylistSize() {
